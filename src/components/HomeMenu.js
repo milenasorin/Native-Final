@@ -8,6 +8,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { auth } from "../firebase/config";
+import Search from "../screens/Search";
 
 const Tab = createBottomTabNavigator();
 
@@ -44,6 +45,18 @@ class HomeMenu extends Component {
           tabBarInactiveTintColor: "#555",
         }}
       />
+        <Tab.Screen
+        name="Search"
+        component={Search}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <AntDesign name="search" size={size} color={color} />
+          ),
+          tabBarActiveTintColor: "#007bff",
+          tabBarInactiveTintColor: "#555",
+        }}
+      />
+
       <Tab.Screen
         name="Perfil"
         component={Profile}
