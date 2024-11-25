@@ -1,7 +1,7 @@
+
 import React, { Component } from "react";
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { auth, db } from "../firebase/config.js";
-
 export default class Register extends Component {
   constructor() {
     super();
@@ -9,65 +9,17 @@ export default class Register extends Component {
       email: "",
       userName: "",
       password: "",
-      emailError: "",
-      userNameError: "",
-      passwordError: "",
+      errorFirebase: "",
+      errorEmail: "",
+      errorUser: "",
+      errorPassword: "",
     };
   }
-
-  validateFields() {
-    let isValid = true;
-
-
-    if (!this.state.email) {
-      this.setState({ emailError: "El correo electrónico es obligatorio" });
-      isValid = false;
-    } else if (!this.state.email.includes("@")) {
-      this.setState({ emailError: "El correo electrónico debe contener un @" });
-      isValid = false;
-    } else {
-      this.setState({ emailError: "" });
-    }
-
-
-    if (!this.state.userName) {
-      this.setState({ userNameError: "El nombre de usuario es obligatorio" });
-      isValid = false;
-    } else {
-      this.setState({ userNameError: "" });
-    }
-
-  
-    if (!this.state.password) {
-      this.setState({ passwordError: "La contraseña es obligatoria" });
-      isValid = false;
-    } else if (this.state.password.length < 6) {
-      this.setState({
-        passwordError: "La contraseña debe tener al menos 6 caracteres",
-      });
-      isValid = false;
-    } else {
-      this.setState({ passwordError: "" });
-    }
-
-    return isValid;
-  }
-
-  isFormValid() {
-    const { email, userName, password } = this.state;
-    return email.includes("@") && userName.length > 0 && password.length >= 6;
-  }
-
   onSubmit() {
-    if (!this.validateFields()) {
-      return;
-    }
-
     const { email, userName, password } = this.state;
-
     auth
       .createUserWithEmailAndPassword(email, password)
-      .then(() => {
+      .then((response) => {
         db.collection("users")
           .add({
             email,
@@ -75,63 +27,65 @@ export default class Register extends Component {
             createdAt: Date.now(),
           })
           .then(() => {
-            console.log("Usuario registrado y datos guardados en Firestore");
+            this.setState({ errorFirebase: "" });
             this.props.navigation.navigate("Login");
-          })
-          .catch((error) => {
-            console.error("Error al guardar los datos del usuario:", error);
-          });
+          }) 
       })
       .catch((error) => {
-        console.error("Error al registrar el usuario:", error);
-        this.setState({ emailError: error.message });
+        this.setState({ errorFirebase: error.message });
       });
   }
-
   render() {
-    const {
-      email, userName, password, emailError, userNameError, passwordError } = this.state;
-
-    const isValid = this.isFormValid();
-
+    const { email, userName, password, errorFirebase } = this.state;
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Registro</Text>
-
         <TextInput
           style={styles.input}
           placeholder="Correo Electrónico"
           keyboardType="email-address"
-          onChangeText={(text) => this.setState({ email: text })}
+          onChangeText={(text) => {this.setState({ email: text })
+          if (text === "") {
+            this.setState({ errorEmail: "El correo electrónico es obligatorio" });
+          } else {
+            this.setState({ errorEmail: "" });
+          }}}
           value={email}
         />
-        {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
-
+        {this.state.errorEmail ? <Text style={styles.error}>{this.state.errorEmail}</Text> : null}
         <TextInput
           style={styles.input}
           placeholder="Nombre de Usuario"
-          onChangeText={(text) => this.setState({ userName: text })}
+          onChangeText={(text) => {this.setState({ userName: text })
+          if (text === "") {
+            this.setState({ errorUser: "El user es obligatorio" });
+          } else {
+            this.setState({ errorUser: "" });
+          }}}
           value={userName}
         />
-        {userNameError ? <Text style={styles.error}>{userNameError}</Text> : null}
-
+        {this.state.errorUser ? <Text style={styles.error}>{this.state.errorUser}</Text> : null}
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
-          secureTextEntry
-          onChangeText={(text) => this.setState({ password: text })}
+          secureTextEntry={true}
+          onChangeText={(text) => {this.setState({ password: text })
+          if (text === "") {
+            this.setState({ errorPassword: "La contra es obligatoria" });
+          } else {
+            this.setState({ errorPassword: "" });
+          }}}
           value={password}
         />
-        {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
-
+        {this.state.errorPassword ? <Text style={styles.error}>{this.state.errorPassword}</Text> : null}
+        {errorFirebase ? <Text style={styles.error}>{errorFirebase}</Text> : null}
         <TouchableOpacity
-          style={[styles.button, !isValid && styles.disabled]}
+        style={[styles.button, (!email || !userName || !password) && styles.disabled]}
           onPress={() => this.onSubmit()}
-          disabled={!isValid}
+          disabled={!email || !userName || !password} 
         >
           <Text style={styles.buttonText}>Registrarme</Text>
         </TouchableOpacity>
-
         <TouchableOpacity onPress={() => this.props.navigation.navigate("Login")}>
           <Text style={styles.link}>¿Ya tienes una cuenta? Inicia sesión</Text>
         </TouchableOpacity>
@@ -139,7 +93,6 @@ export default class Register extends Component {
     );
   }
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
