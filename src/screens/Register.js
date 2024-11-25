@@ -1,4 +1,3 @@
-
 import React, { Component } from "react";
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { auth, db } from "../firebase/config.js";
@@ -10,26 +9,65 @@ export default class Register extends Component {
       email: "",
       userName: "",
       password: "",
-      error: "",
+      emailError: "",
+      userNameError: "",
+      passwordError: "",
     };
   }
 
-  onSubmit() {
+  validateFields() {
+    let isValid = true;
+
+
+    if (!this.state.email) {
+      this.setState({ emailError: "El correo electrónico es obligatorio" });
+      isValid = false;
+    } else if (!this.state.email.includes("@")) {
+      this.setState({ emailError: "El correo electrónico debe contener un @" });
+      isValid = false;
+    } else {
+      this.setState({ emailError: "" });
+    }
+
+
+    if (!this.state.userName) {
+      this.setState({ userNameError: "El nombre de usuario es obligatorio" });
+      isValid = false;
+    } else {
+      this.setState({ userNameError: "" });
+    }
+
+  
+    if (!this.state.password) {
+      this.setState({ passwordError: "La contraseña es obligatoria" });
+      isValid = false;
+    } else if (this.state.password.length < 6) {
+      this.setState({
+        passwordError: "La contraseña debe tener al menos 6 caracteres",
+      });
+      isValid = false;
+    } else {
+      this.setState({ passwordError: "" });
+    }
+
+    return isValid;
+  }
+
+  isFormValid() {
     const { email, userName, password } = this.state;
+    return email.includes("@") && userName.length > 0 && password.length >= 6;
+  }
 
-    if (!email || !userName || !password) {
-      this.setState({ error: "Todos los campos son obligatorios" });
+  onSubmit() {
+    if (!this.validateFields()) {
       return;
     }
 
-    if (password.length < 6) {
-      this.setState({ error: "La contraseña debe tener al menos 6 caracteres" });
-      return;
-    }
+    const { email, userName, password } = this.state;
 
     auth
       .createUserWithEmailAndPassword(email, password)
-      .then((response) => {
+      .then(() => {
         db.collection("users")
           .add({
             email,
@@ -37,24 +75,29 @@ export default class Register extends Component {
             createdAt: Date.now(),
           })
           .then(() => {
-            this.setState({ error: "" });
+            console.log("Usuario registrado y datos guardados en Firestore");
             this.props.navigation.navigate("Login");
           })
           .catch((error) => {
-            this.setState({ error: "Error al guardar los datos del usuario" });
+            console.error("Error al guardar los datos del usuario:", error);
           });
       })
       .catch((error) => {
-        this.setState({ error: error.message });
+        console.error("Error al registrar el usuario:", error);
+        this.setState({ emailError: error.message });
       });
   }
 
   render() {
-    const { email, userName, password, error } = this.state;
+    const {
+      email, userName, password, emailError, userNameError, passwordError } = this.state;
+
+    const isValid = this.isFormValid();
 
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Registro</Text>
+
         <TextInput
           style={styles.input}
           placeholder="Correo Electrónico"
@@ -62,12 +105,16 @@ export default class Register extends Component {
           onChangeText={(text) => this.setState({ email: text })}
           value={email}
         />
+        {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+
         <TextInput
           style={styles.input}
           placeholder="Nombre de Usuario"
           onChangeText={(text) => this.setState({ userName: text })}
           value={userName}
         />
+        {userNameError ? <Text style={styles.error}>{userNameError}</Text> : null}
+
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
@@ -75,14 +122,16 @@ export default class Register extends Component {
           onChangeText={(text) => this.setState({ password: text })}
           value={password}
         />
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
+
         <TouchableOpacity
-          style={[styles.button, (!email || !userName || !password) && styles.disabled]}
+          style={[styles.button, !isValid && styles.disabled]}
           onPress={() => this.onSubmit()}
-          disabled={!email || !userName || !password} //falta validacion de mensaje vacio en cada campo de form
+          disabled={!isValid}
         >
           <Text style={styles.buttonText}>Registrarme</Text>
         </TouchableOpacity>
+
         <TouchableOpacity onPress={() => this.props.navigation.navigate("Login")}>
           <Text style={styles.link}>¿Ya tienes una cuenta? Inicia sesión</Text>
         </TouchableOpacity>
@@ -137,4 +186,3 @@ const styles = StyleSheet.create({
     backgroundColor: "#ccc",
   },
 });
-
