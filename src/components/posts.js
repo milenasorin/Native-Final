@@ -11,19 +11,22 @@ export default class Posts extends Component {
     this.state = {
       like: false,
       cantLikes: 0,
+      owner: false,
     };
   }
 
   componentDidMount() {
     const { likes } = this.props.posteo.data;
 
-
     this.setState({
       like: likes.includes(auth.currentUser.email),
       cantLikes: likes.length,
     });
 
- 
+    if (this.props.posteo.data.email === auth.currentUser.email) {
+      this.setState({ owner: true })
+    }
+
     db.collection("posts")
       .doc(this.props.posteo.id)
       .onSnapshot((doc) => {
@@ -57,6 +60,18 @@ export default class Posts extends Component {
       .catch((error) => console.error("Error al quitar like:", error));
   }
 
+  delete = () => {
+    db.collection("posts")
+      .doc(this.props.posteo.id)
+      .delete()
+      .then(() => {
+        console.log("post eliminado");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
   render() {
     return (
       <View style={styles.container}>
@@ -73,6 +88,14 @@ export default class Posts extends Component {
             </TouchableOpacity>
           )}
           <Text>Cantidad de Likes: {this.state.cantLikes}</Text>
+          {this.state.owner ? (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => this.delete()}
+            >
+              <Text style={styles.deleteText}>Eliminar</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
     );
@@ -101,5 +124,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#555",
     marginTop: 5,
+  },
+  deleteButton: {
+    marginTop: 10,
+    backgroundColor: "#ff4d4f",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    width: 70
+  },
+  deleteText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

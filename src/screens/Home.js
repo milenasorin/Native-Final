@@ -38,19 +38,6 @@ class Home extends Component {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <Posts posteo={item} />} 
         />
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={() => {
-            auth
-              .signOut()
-              .then(() => {
-                this.props.navigation.navigate("Login");
-              })
-              .catch((error) => console.error("Error al cerrar sesión:", error));
-          }}
-        >
-          <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -68,17 +55,6 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 20,
     textAlign: "center",
-  },
-  logoutButton: {
-    backgroundColor: "#d9534f",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  logoutButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
   },
 });
 
