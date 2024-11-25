@@ -1,4 +1,5 @@
 import React from "react";
+import { Component } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from "../screens/Home";
 import Profile from "../screens/Profile";
@@ -6,10 +7,26 @@ import NuevoPost from "../screens/NuevoPost";
 import Entypo from "@expo/vector-icons/Entypo";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { auth } from "../firebase/config";
 
 const Tab = createBottomTabNavigator();
 
-const HomeMenu = () => {
+class HomeMenu extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+    };
+  }
+
+  componentDidMount() {
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        this.props.navigation.navigate("Login");
+      }
+    });
+  }
+
+  render(){
   return (
     <Tab.Navigator
       screenOptions={{
@@ -50,7 +67,7 @@ const HomeMenu = () => {
         }}
       />
     </Tab.Navigator>
-  );
+  )};
 };
 
 export default HomeMenu;

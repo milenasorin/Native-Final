@@ -11,6 +11,14 @@ export default class NuevoPost extends Component {
     };
   }
 
+  componentDidMount() {
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        this.props.navigation.navigate("Login");
+      }
+    });
+  }
+
   handlePost() {
     const { message } = this.state;
 
